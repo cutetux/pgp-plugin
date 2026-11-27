@@ -5,6 +5,8 @@ import { KeyRecord } from '../../../storage.ts';
 import { btn, fmtDate, isExpired, card } from '../../shared.ts';
  import { useState } from 'react';
 import { AccountEntry } from '../../../util.ts';
+import { KEY_ALGORITHMS, KeyAlgorithm } from '../../../pgp/keygen.ts';
+import type { GenerateKeyForm } from './useSettingsLogic.ts';
 interface PrivateKeysSectionProps {
   keys: KeyRecord[];
   unlocked: Record<string, boolean>;
@@ -13,8 +15,8 @@ interface PrivateKeysSectionProps {
   selectedAccountId: string | undefined;
   accounts: AccountEntry[];
   fileRef: RefObject<HTMLInputElement | null>;
-  gen: { open: boolean; name: string; email: string; pass: string };
-  setGen: React.Dispatch<React.SetStateAction<{ open: boolean; name: string; email: string; pass: string }>>;
+  gen: GenerateKeyForm;
+  setGen: React.Dispatch<React.SetStateAction<GenerateKeyForm>>;
   onUnlockAllWebAuthn: () => void;
   onSetDefaultKey: (targetKey: KeyRecord) => void;
   onSetServerSideEncryption: (key: KeyRecord) => void;
@@ -518,6 +520,22 @@ export function PrivateKeysSection({
               onChange={(e) => setGen({ ...gen, pass: e.target.value })}
               style={{ height: '2.25rem', padding: '0 0.75rem', borderRadius: '0.375rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-background, #ffffff)', outline: 'none' }}
             />
+
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px' }}>
+              {host.i18n.t('settings.key_type')}
+              <select
+                value={gen.algorithm}
+                disabled={busy}
+                onChange={(e) => setGen({ ...gen, algorithm: e.target.value as KeyAlgorithm })}
+                style={{ height: '2.25rem', padding: '0 0.75rem', borderRadius: '0.375rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-background, #ffffff)', outline: 'none' }}
+              >
+                {KEY_ALGORITHMS.map((algorithm) => (
+                  <option key={algorithm} value={algorithm}>
+                    {host.i18n.t(`settings.key_type.${algorithm}`)}
+                  </option>
+                ))}
+              </select>
+            </label>
             
             <button
               type="button"

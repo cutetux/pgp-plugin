@@ -3,6 +3,7 @@ import host from '@plugin-host';
 import { card, selectStyle } from './shared.ts';
 import { AccountEntry } from '../util.ts';
 import { listKeyRecords } from '../storage.ts';
+import { defaultKeyAlgorithm, KEY_ALGORITHMS, KeyAlgorithm } from '../pgp/keygen.ts';
 
 const h = React.createElement;
 const { useState } = React;
@@ -10,7 +11,7 @@ const { useState } = React;
 interface OnboardingFlowProps {
   busy: boolean;
   onImportClick: () => void;
-  onGenerate: (name: string, email: string, pass: string) => void;
+  onGenerate: (name: string, email: string, pass: string, algorithm: KeyAlgorithm) => void;
   onJsonImport: () => void;
   onMigrate: (sourceAccountId: string) => void;
 }
@@ -25,6 +26,7 @@ export function OnboardingFlow({ busy, onImportClick, onGenerate, onJsonImport, 
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [pass, setPass] = useState<string>('');
+  const [algorithm, setAlgorithm] = useState<KeyAlgorithm>(() => defaultKeyAlgorithm());
   const [identityOptions, setIdentityOptions] = useState<UnifiedIdentityOption[]>([]);
   const [loadingIdentities, setLoadingIdentities] = useState<boolean>(false);
   const [accounts, setAccounts] = useState<any[]>([]);
@@ -218,14 +220,26 @@ export function OnboardingFlow({ busy, onImportClick, onGenerate, onJsonImport, 
         value: pass, 
         onChange: (e: React.ChangeEvent<HTMLInputElement>) => setPass(e.target.value), 
         style: inputStyle 
-      })
+      }),
+
+      h('label', { style: { display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px' } },
+        host.i18n.t('settings.key_type'),
+        h('select', {
+          value: algorithm,
+          disabled: busy,
+          onChange: (e: React.ChangeEvent<HTMLSelectElement>) => setAlgorithm(e.target.value as KeyAlgorithm),
+          style: selectStyle
+        },
+          KEY_ALGORITHMS.map(option => h('option', { key: option, value: option }, host.i18n.t(`settings.key_type.${option}`)))
+        )
+      )
     ),
     h('div', { style: { display: 'flex', justifyContent: 'space-between' } },
       h('button', { className: 'composer-btn', disabled: busy, onClick: () => setStep(3) }, 'Back'),
       h('button', { 
         className: 'composer-btn', 
         disabled: busy || !email || !pass, 
-        onClick: () => onGenerate(name, email, pass) 
+        onClick: () => onGenerate(name, email, pass, algorithm)
       }, 'Generate & Download Backup')
     )
   );

@@ -134,8 +134,8 @@
     },
     "generateKey": {
       "type": "select",
-      "label": "Which engine to use for key generation",
-      "description": "Which engine to use for key generation. curve25519 is a more modern and secure algorithm than RSA, but it may not be compatible with all email clients, like Protonmail. ed25519Legacy is a legacy version of ed25519 that is compatible with older clients. rsa4096 is a more traditional algorithm that is compatible with all clients, but it is slower than curve25519.",
+      "label": "Default key type for key generation",
+      "description": "Key type preselected when generating a key pair. It can still be changed in the generate dialog. curve25519 is a more modern and secure algorithm than RSA, but it may not be compatible with all email clients, like Protonmail. ed25519Legacy is a legacy version of ed25519 that is compatible with older clients. rsa4096 is a more traditional algorithm that is compatible with all clients, but it is slower than curve25519.",
       "default": "rsa4096",
       "options": [
         "curve25519",
@@ -319,6 +319,10 @@
       "settings.create_key_pair" : "Create a new key pair",
       "settings.generate_revocation" : "Generate and download revocation certificate",
       "settings.passphrase": "Passphrase",
+      "settings.key_type": "Key type",
+      "settings.key_type.rsa4096": "RSA 4096 (works with every client, slower)",
+      "settings.key_type.ed25519Legacy": "Ed25519 / Curve25519 (fast, works with most clients)",
+      "settings.key_type.curve25519": "Ed25519 / X25519, RFC 9580 (newest format, not supported by every client)",
       "settings.full_name": "Full Name",
       "settings.email": "Email",
       "prompt.no_default_key.title": "No default key available",

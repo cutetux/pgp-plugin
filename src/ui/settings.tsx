@@ -61,9 +61,9 @@ const {
         onImportClick: () => fileRef.current && fileRef.current.click(),
         onMigrate: onMigrate,
         onJsonImport: () => jsonFileRef.current && jsonFileRef.current.click(),
-        onGenerate: (name, email, pass) => {
+        onGenerate: (name, email, pass, algorithm) => {
           // Fire the modified generation logic
-          void handleGenerateKey({ name, email, pass });
+          void handleGenerateKey({ name, email, pass, algorithm });
         }
       })
     );

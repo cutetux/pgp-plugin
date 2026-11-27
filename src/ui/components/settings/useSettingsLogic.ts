@@ -24,6 +24,19 @@ import { uploadKey, requestVerify, lookup } from '../../../pgp/server.ts';
 import { AccountEntry, bufferToBytes, bytesToBuffer, EncryptionAtRestConfig, generateNumericRecoveryCode, generateSalt, getCurrentAccountId, PublicKeyInput } from '../../../util.ts';
 import { changePassword } from '../../../pgp/change-passphrase.ts';
 import { settings } from '../../../shared.ts';
+import { defaultKeyAlgorithm, generateKeyPair, KeyAlgorithm } from '../../../pgp/keygen.ts';
+
+export interface GenerateKeyInput {
+  name: string;
+  email: string;
+  pass: string;
+  algorithm?: KeyAlgorithm;
+}
+
+export interface GenerateKeyForm extends GenerateKeyInput {
+  open: boolean;
+  algorithm: KeyAlgorithm;
+}
 
 export function useSettingsLogic() {
   const [accounts, setAccounts] = useState<AccountEntry[]>([]);
@@ -37,7 +50,7 @@ export function useSettingsLogic() {
   const certFileRef = useRef<HTMLInputElement | null>(null);
   const jsonFileRef = useRef<HTMLInputElement | null>(null);
   const [searchEmail, setSearchEmail] = useState<string>('');
-  const [gen, setGen] = useState({ open: false, name: '', email: '', pass: '' });
+  const [gen, setGen] = useState<GenerateKeyForm>(() => ({ open: false, name: '', email: '', pass: '', algorithm: defaultKeyAlgorithm() }));
 
   useEffect(() => {
     let isMounted = true;
@@ -682,9 +695,9 @@ export function useSettingsLogic() {
       setBusy(false);
     }
   }
-  async function handleGenerateKey(overrideGen?: { name: string, email: string, pass: string }, withRecovery: boolean = true, autoAddToServerSideEncryption: boolean = false) {
+  async function handleGenerateKey(overrideGen?: GenerateKeyInput, withRecovery: boolean = true, autoAddToServerSideEncryption: boolean = false) {
 
-    let data = gen as {name: string, email: string, pass: string}
+    let data: GenerateKeyInput = gen
     if(overrideGen?.email){
       data = overrideGen
     }
@@ -696,41 +709,12 @@ export function useSettingsLogic() {
     setBusy(true);
     try {
       const { codeFormatted, codeRaw } = generateNumericRecoveryCode();
-      let privateKey: string;
-      let revocationCertificate: string;
-
-      if (settings().generateKey == 'ed25519Legacy') {
-        ({ privateKey, revocationCertificate } = await openpgp.generateKey({
-          type: 'ecc',
-          curve: 'ed25519Legacy',
-          userIDs: [{ name: data.name, email: data.email }],
-          passphrase: data.pass,
-          subkeys: [
-            {
-              type: 'ecc',
-              curve: 'curve25519Legacy',
-              sign: false
-            }
-          ],
-          format: 'armored'
-        }));
-      } else if (settings().generateKey == 'curve25519') {
-        ({ privateKey, revocationCertificate } = await openpgp.generateKey({
-          type: 'curve25519',
-          userIDs: [{ name: data.name, email: data.email }],
-          passphrase: data.pass,
-          subkeys: [{ type: 'curve25519', sign: false }],
-          format: 'armored'
-        }));
-      } else {
-        ({ privateKey, revocationCertificate } = await openpgp.generateKey({
-          type: 'rsa',
-          rsaBits: 4096,
-          userIDs: [{ name: data.name, email: data.email }],
-          passphrase: data.pass,
-          format: 'armored'
-        }));
-      }
+      const { privateKey, revocationCertificate } = await generateKeyPair({
+        algorithm: data.algorithm ?? defaultKeyAlgorithm(),
+        name: data.name,
+        email: data.email,
+        passphrase: data.pass,
+      });
       //if there is not default key, set this one as default
       // Check for an existing default key
       const hasDefaultKey = keys.some(k => k.default);
@@ -813,7 +797,7 @@ export function useSettingsLogic() {
     }
       
       host.toast.success(host.i18n.t('settings.success.key_generated'));
-      setGen({ open: false, name: "", email: "", pass: "" });
+      setGen({ open: false, name: "", email: "", pass: "", algorithm: defaultKeyAlgorithm() });
       await refresh();
     } catch (err: any) {
       host.toast.error(host.i18n.t('settings.error.generic_failure', { message: err.message }));
