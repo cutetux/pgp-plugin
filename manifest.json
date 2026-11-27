@@ -202,6 +202,7 @@
       "error.no_key_for_email_prefix": "No OpenPGP key for ",
       "error.no_key_for_email_suffix": ". Import one in Settings → Plugins → OpenPGP.",
       "error.missing_encryption_key_prefix": "Missing encryption key for: ",
+      "warn.draft_not_decrypted": "This draft could not be decrypted with your imported OpenPGP keys. It opens as stored.",
       "error.key_locked": "Your OpenPGP key is locked. Unlock it in Settings, then resend.",
       "error.cryptographic_failed": "Cryptographic processing failed to generate an output envelope.",
       "error.send_failed_prefix": "OpenPGP send failed: ",
